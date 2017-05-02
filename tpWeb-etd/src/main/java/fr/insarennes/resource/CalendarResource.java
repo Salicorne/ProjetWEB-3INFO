@@ -2,10 +2,14 @@ package fr.insarennes.resource;
 
 import fr.insarennes.model.Agenda;
 import fr.insarennes.model.Enseignant;
+import io.swagger.annotations.Api;
 import java.net.HttpURLConnection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -17,7 +21,17 @@ import javax.ws.rs.core.Response;
 
 @Singleton // Q: with and without, see 3.4 https://jersey.java.net/documentation/latest/jaxrs-resources.html
 @Path("calendar")
+@Api(value = "calendar")
 public class CalendarResource {
+	private static final Logger LOGGER = Logger.getAnonymousLogger();
+
+	// Static blocks are used to parametrized static objects of the class.
+	static {
+		// Define the level of importance the Logger has to consider.
+		// The logged messages with an importance lower than the one defined here will be ignored.
+		LOGGER.setLevel(Level.ALL);
+	}
+
 	private final EntityManagerFactory emf;
 	private final EntityManager em;
 	private final Agenda agenda;
@@ -27,9 +41,12 @@ public class CalendarResource {
 		agenda = new Agenda();
 		emf = Persistence.createEntityManagerFactory("agendapp");
 		em = emf.createEntityManager();
-		em.getTransaction().begin();
+
+		final EntityTransaction tr = em.getTransaction();
+
+		tr.begin();
 		em.persist(agenda);
-		em.getTransaction().commit();
+		tr.commit();
 
 		// You can add here calendar elements to add by default in the database of the application.
 		// For instance:
@@ -39,7 +56,7 @@ public class CalendarResource {
 		//			// and a em.getTransaction().commit() at the end of the transaction to validate it.
 		//			// In case of crashes, you have to surround the code with a try/catch block, where the catch rollbacks the
 		//			// transaction using em.getTransaction().rollback()
-		//			em.getTransaction().begin();
+		//			tr.begin();
 		//			em.persist(agenda);
 		//
 		//			Enseignant ens = new Enseignant("Blouin");
@@ -51,15 +68,17 @@ public class CalendarResource {
 		//			TD td = new TD(mat, LocalDate.of(2015, Month.JANUARY, 2).atTime(8, 0), ens, Duration.ofHours(2));
 		//			agenda.addCours(td);
 		//			em.persist(td);
-		//			em.getTransaction().commit();
+		//			tr.commit();
 		//
-		//			System.out.println("LOG for calendar resource: ");
-		//			System.out.println(ens);
-		//			System.out.println(mat);
-		//			System.out.println(td);
+		//			LOGGER.log(Level.INFO, "Added during the creation of the calendar resource:");
+		//			LOGGER.log(Level.INFO, "a Enseignant: " + ens);
+		//			LOGGER.log(Level.INFO, "a Matiere: " + mat);
+		//			LOGGER.log(Level.INFO, "a TD: " + td);
 		//		}catch(final Throwable ex) {
-		//			ex.printStackTrace();
-		//			em.getTransaction().rollback();
+		//			LOGGER.log(Level.SEVERE, "Crash during the creation of initial data", ex);
+		//			if(tr.isActive()) {
+		//				tr.rollback();
+		//			}
 		//		}
 	}
 
@@ -82,17 +101,27 @@ public class CalendarResource {
 	@Path("ens/")
 	@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	@Produces(MediaType.APPLICATION_JSON)
-	public Enseignant postEnseignant(Enseignant ens) {
+	public Enseignant postEnseignant(final Enseignant ens) {
+		final EntityTransaction tr = em.getTransaction();
 		try {
 			// begin starts a transaction:
 			// https://en.wikibooks.org/wiki/Java_Persistence/Transactions
-			em.getTransaction().begin();
+			tr.begin();
 			em.persist(ens);
-			em.getTransaction().commit();
+			tr.commit();
 			return ens;
-		}catch(Throwable ex) {
-			// If an exception occurs, the transaction has to be rollbacked.
-			em.getTransaction().rollback();
+		}catch(final Throwable ex) {
+			// If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
+			if(tr.isActive()) {
+				tr.rollback();
+			}
+			// Loggers are widely used to log information about the execution of a program.
+			// The classical use is a static final Logger for each class or for the whole application.
+			// Here, the first parameter is the level of importance of the message.
+			// The second parameter is the message, and the third one is the exception.
+			// Various useful methods compose a Logger.
+			// By default, when a message is logged it is printed in the console.
+			LOGGER.log(Level.SEVERE, "Crash on adding a Enseignant: " + ens, ex);
 			// A Web exception is then thrown.
 			throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
 		}
