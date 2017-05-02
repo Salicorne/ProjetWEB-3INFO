@@ -136,10 +136,10 @@ public class TestJPACalendar {
 
     @Test
     public void testNamedQueries() {
-        tr.begin();
+        //tr.begin();
         TypedQuery<Enseignant> q1 = em.createNamedQuery("SelectEnseignant", Enseignant.class);
         TypedQuery<Enseignant> q2 = em.createNamedQuery("SelectEnseignants", Enseignant.class);
-        tr.commit();
+        //tr.commit();
 
         //////////////// TEST Q1 /////////////////
 

@@ -7,6 +7,8 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+
+import net.bytebuddy.agent.builder.AgentBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -61,6 +63,53 @@ public class TestCalendarResource extends JerseyTest {
 		// received a unique ID (see the JPA practice session).
 		assertNotSame(ensWithoutID.getId(), ensWithID.getId());
 	}
+
+    @Test
+    public void testGetEnseignantOk() {
+        final String name = "Cellier";
+
+        target("calendar/ens").request().post(Entity.xml(new Enseignant(name)));
+        Response res = target("calendar/ens/"+name).request().get();
+        assertEquals(Response.Status.OK.getStatusCode(), res.getStatus());
+        Enseignant e = res.readEntity(Enseignant.class);
+        assertEquals(e.getName(), name);
+    }
+
+    @Test
+    public void testDeleteEnseignantOk() {
+        final String name = "Cellier";
+
+        target("calendar/ens").request().post(Entity.xml(new Enseignant(name)));
+        Response res = target("calendar/ens/"+name).request().get();
+        assertEquals(Response.Status.OK.getStatusCode(), res.getStatus());
+        Enseignant e = res.readEntity(Enseignant.class);
+        assertEquals(e.getName(), name);
+
+        Response res2 = target("calendar/ens/"+name).request().delete();
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), res2.getStatus());
+
+        Response res3 = target("calendar/ens/"+name).request().get();
+        assertNotSame(Response.Status.OK.getStatusCode(), res3.getStatus());
+    }
+
+    //TODO
+    @Test
+    public void testPutMatiereOk() {
+        final String name = "BDD & WEB";
+        int id;
+
+        target("calendar/ens").request().post(Entity.xml(new Enseignant(name)));
+        Response res = target("calendar/ens/"+name).request().get();
+        assertEquals(Response.Status.OK.getStatusCode(), res.getStatus());
+        Enseignant e = res.readEntity(Enseignant.class);
+        assertEquals(e.getName(), name);
+
+        Response res2 = target("calendar/ens/"+name).request().delete();
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), res2.getStatus());
+
+        Response res3 = target("calendar/ens/"+name).request().get();
+        assertNotSame(Response.Status.OK.getStatusCode(), res3.getStatus());
+    }
 
 	// In your tests, do not create teachers, topics, and courses that already exist (in the constructor of the CalendarResource).
 }

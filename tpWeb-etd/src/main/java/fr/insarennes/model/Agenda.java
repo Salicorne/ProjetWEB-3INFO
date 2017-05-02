@@ -1,5 +1,6 @@
 package fr.insarennes.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 @Entity(name="AGENDA")
 public class Agenda extends CalendarElement {
+	//@Column(nullable = false)
 	private String name;
 	@OneToMany(mappedBy="agenda")
 	private Set<Cours> cours;
