@@ -15,10 +15,12 @@ import org.junit.Test;
 import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import static com.sun.xml.internal.ws.dump.LoggingDumpTube.Position.After;
 import static org.junit.Assert.assertEquals;
@@ -136,6 +138,29 @@ public class TestCalendarResource extends JerseyTest {
         TD newc = responseAfterPost.readEntity(TD.class);
         assertEquals(c, newc);
         assertNotSame(c.getId(), newc.getId());
+    }
+
+
+
+    @Test
+    public void testGetIdOK() {
+        Enseignant e1 = new Enseignant("Cellier");
+        Response r1 = target("calendar/ens").request().post(Entity.xml(e1));
+        Enseignant e2 = r1.readEntity(Enseignant.class);
+
+        Matiere m1 = new Matiere("BddWeb", 4);
+        Response r2 = target("calendar/matiere").request().post(Entity.xml(m1));
+        Matiere m2 = r2.readEntity(Matiere.class);
+
+        TD c = new TD(m2, LocalDateTime.now(), e2, Duration.ofHours(2));
+
+        Response responseAfterPost = target("calendar/cours").request().post(Entity.xml(c));
+
+        Response res = target("calendar/getIdUse/"+m2.getId()).request().post(Entity.text(""));
+        ArrayList<Cours> cc = res.readEntity(new GenericType<ArrayList<Cours>>(){});
+
+        assertEquals(cc.size(), 1);
+
     }
 
 	// In your tests, do not create teachers, topics, and courses that already exist (in the constructor of the CalendarResource).

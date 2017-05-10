@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
@@ -216,7 +217,7 @@ public class CalendarResource {
             tr.begin();
             Matiere mat = em.find(Matiere.class, id);
             mat.setName(newname);
-            em.persist(mat);
+            //em.persist(mat);  /!\ not to do !
             tr.commit();
         }catch(final Throwable ex) {
             // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
@@ -282,72 +283,23 @@ public class CalendarResource {
             throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
         }
     }
-/*
-    @GET
-    @Path("cours/{name}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Cours getCours(@PathParam("name") final String name) {
-        final EntityTransaction tr = em.getTransaction();
-        try {
-            TypedQuery<Matiere> query = em.createNamedQuery("SelectMatieresByName", Matiere.class);
-            return query.setParameter("name", name).getResultList().get(0);
-        }catch(final Throwable ex) {
-            LOGGER.log(Level.SEVERE, "Crash reading Matiere: " + name, ex);
-            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
-        }
-    }
 
-    @PUT
-    @Path("cours/{id}/{newname}")
-    public void putCours(@PathParam("id") final int id, @PathParam("newname") final String newname) {
-        final EntityTransaction tr = em.getTransaction();
-        try {
-            tr.begin();
-            Matiere mat = em.find(Matiere.class, id);
-            mat.setName(newname);
-            em.persist(mat);
-            tr.commit();
-        }catch(final Throwable ex) {
-            // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
-            if(tr.isActive()) {
-                tr.rollback();
-            }
-            // Loggers are widely used to log information about the execution of a program.
-            // The classical use is a static final Logger for each class or for the whole application.
-            // Here, the first parameter is the level of importance of the message.
-            // The second parameter is the message, and the third one is the exception.
-            // Various useful methods compose a Logger.
-            // By default, when a message is logged it is printed in the console.
-            LOGGER.log(Level.SEVERE, "Crash updating Matiere: " + id + " to " + newname, ex);
-            // A Web exception is then thrown.
-            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
-        }
-    }
-
-    @DELETE
-    @Path("cours/{id}")
-    public void deleteCours(@PathParam("id") final int id) {
-        final EntityTransaction tr = em.getTransaction();
-        try {
-            // begin starts a transaction:
-            tr.begin();
-            //int idToDelete = this.getMatiere(name).getId();
-            int idToDelete = id;
-            Matiere m = em.find(Matiere.class, idToDelete);
-            em.remove(m);
-            tr.commit();
-            //query.setParameter("name", name).executeUpdate();
-        }catch(final Throwable ex) {
-            // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
-            if(tr.isActive()) {
-                tr.rollback();
-            }
-            LOGGER.log(Level.SEVERE, "Crash deleting Matiere: " + id, ex);
-            // A Web exception is then thrown.
-            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
-        }
-    }*/
     //</editor-fold>
+
+    @POST
+    @Path("getIdUse/{id}")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getIdUse(final int id) {
+        try {
+            ArrayList<Cours> cours = this.agenda.getIdUse(id);
+            return Response.status(Response.Status.OK).entity(cours.toArray(new Cours[cours.size()])).build();
+        }catch(final Throwable ex) {
+            LOGGER.log(Level.SEVERE, "Crash on reading Agenda !", ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
 
 	// DO NOT USE begin(), commit() or rollback() for the @GET verb.
 

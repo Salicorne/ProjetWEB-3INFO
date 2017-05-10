@@ -3,9 +3,7 @@ package fr.insarennes.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 //TODO Q4
 //http://www.oracle.com/technetwork/middleware/ias/toplink-jpa-annotations-096251.html
@@ -60,6 +58,16 @@ public class Agenda extends CalendarElement {
 
 	public void setCours(final Set<Cours> cs) {
 		cours = Objects.requireNonNull(cs);
+	}
+
+	public ArrayList<Cours> getIdUse(final int id) {
+		ArrayList<Cours> list = new ArrayList<Cours>();
+		for(Cours c : this.cours) {
+			if(c.matchesID(id)) {
+				list.add(c);
+			}
+		}
+		return list;
 	}
 
 	@Override
