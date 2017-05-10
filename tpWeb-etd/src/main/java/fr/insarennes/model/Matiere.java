@@ -3,12 +3,16 @@ package fr.insarennes.model;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 
 @Entity(name="MATIERE")
 @NamedQueries({
     @NamedQuery(name="SelectMatieres", query="SELECT m FROM MATIERE m"),
+	@NamedQuery(name="SelectMatiere", query="SELECT m FROM MATIERE m WHERE m.id=:id"),
+	@NamedQuery(name="SelectMatieresByName", query="SELECT m FROM MATIERE m WHERE m.name=:name"),
 })
+@XmlRootElement
 public class Matiere extends CalendarElement {
 	private String name;
 

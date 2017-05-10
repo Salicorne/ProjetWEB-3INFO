@@ -1,13 +1,27 @@
 package fr.insarennes.model;
 
+import fr.insarennes.utils.DurationXmlAdapter;
+import fr.insarennes.utils.LocalDateTimeXmlAdapter;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 @Entity(name="COURS")
+@NamedQueries({
+    @NamedQuery(name="SelectCours", query="SELECT c FROM COURS c"),
+    @NamedQuery(name="SelectCoursById", query="SELECT c FROM COURS c WHERE c.id=:id"),
+})
+@XmlSeeAlso({CM.class,TD.class})
+@XmlRootElement
 public abstract class Cours extends CalendarElement {
 	protected Matiere matiere;
 	protected LocalDateTime horaire;
@@ -53,6 +67,7 @@ public abstract class Cours extends CalendarElement {
 		return horaire;
 	}
 
+    @XmlJavaTypeAdapter(LocalDateTimeXmlAdapter.class)
 	public void setHoraire(final LocalDateTime h) {
 		horaire = h;
 	}
@@ -69,6 +84,7 @@ public abstract class Cours extends CalendarElement {
 		return duration;
 	}
 
+    @XmlJavaTypeAdapter(DurationXmlAdapter.class)
 	public void setDuration(final Duration d) {
 		duration = d;
 	}

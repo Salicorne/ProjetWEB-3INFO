@@ -1,9 +1,6 @@
 package fr.insarennes.resource;
 
-import fr.insarennes.model.Agenda;
-import fr.insarennes.model.Enseignant;
-import fr.insarennes.model.Matiere;
-import fr.insarennes.model.TD;
+import fr.insarennes.model.*;
 import io.swagger.annotations.Api;
 import java.net.HttpURLConnection;
 import java.time.Duration;
@@ -129,8 +126,6 @@ public class CalendarResource {
 		}
 	}
 
-
-
     @GET
     @Path("ens/{name}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -146,8 +141,6 @@ public class CalendarResource {
             throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
         }
     }
-
-
 
     @DELETE
     @Path("ens/{name}")
@@ -180,6 +173,41 @@ public class CalendarResource {
     //</editor-fold>
 
     //<editor-fold desc="Prefix matiere">
+    @POST
+    @Path("matiere/")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Matiere postMatiere(final Matiere mat) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            tr.begin();
+            em.persist(mat);
+            tr.commit();
+            return mat;
+        }catch(final Throwable ex) {
+            if(tr.isActive()) {
+                tr.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Crash on adding a Matiere : " + mat, ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+
+    @GET
+    @Path("matiere/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Matiere getMatiere(@PathParam("name") final String name) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            TypedQuery<Matiere> query = em.createNamedQuery("SelectMatieresByName", Matiere.class);
+            return query.setParameter("name", name).getResultList().get(0);
+        }catch(final Throwable ex) {
+            LOGGER.log(Level.SEVERE, "Crash reading Matiere: " + name, ex);
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+
     @PUT
     @Path("matiere/{id}/{newname}")
     public void putMatiere(@PathParam("id") final int id, @PathParam("newname") final String newname) {
@@ -206,6 +234,119 @@ public class CalendarResource {
             throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
         }
     }
+
+    @DELETE
+    @Path("matiere/{id}")
+    public void deleteMatiere(@PathParam("id") final int id) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            // begin starts a transaction:
+            tr.begin();
+            //int idToDelete = this.getMatiere(name).getId();
+            int idToDelete = id;
+            Matiere m = em.find(Matiere.class, idToDelete);
+            em.remove(m);
+            tr.commit();
+            //query.setParameter("name", name).executeUpdate();
+        }catch(final Throwable ex) {
+            // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
+            if(tr.isActive()) {
+                tr.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Crash deleting Matiere: " + id, ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="Prefix cours">
+    @POST
+    @Path("cours/")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Cours postCours(final Cours c) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            tr.begin();
+            em.persist(c);
+            agenda.addCours(c);
+            tr.commit();
+            return c;
+        }catch(final Throwable ex) {
+            if(tr.isActive()) {
+                tr.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Crash on adding a Cours : " + c, ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+/*
+    @GET
+    @Path("cours/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Cours getCours(@PathParam("name") final String name) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            TypedQuery<Matiere> query = em.createNamedQuery("SelectMatieresByName", Matiere.class);
+            return query.setParameter("name", name).getResultList().get(0);
+        }catch(final Throwable ex) {
+            LOGGER.log(Level.SEVERE, "Crash reading Matiere: " + name, ex);
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+
+    @PUT
+    @Path("cours/{id}/{newname}")
+    public void putCours(@PathParam("id") final int id, @PathParam("newname") final String newname) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            tr.begin();
+            Matiere mat = em.find(Matiere.class, id);
+            mat.setName(newname);
+            em.persist(mat);
+            tr.commit();
+        }catch(final Throwable ex) {
+            // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
+            if(tr.isActive()) {
+                tr.rollback();
+            }
+            // Loggers are widely used to log information about the execution of a program.
+            // The classical use is a static final Logger for each class or for the whole application.
+            // Here, the first parameter is the level of importance of the message.
+            // The second parameter is the message, and the third one is the exception.
+            // Various useful methods compose a Logger.
+            // By default, when a message is logged it is printed in the console.
+            LOGGER.log(Level.SEVERE, "Crash updating Matiere: " + id + " to " + newname, ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }
+
+    @DELETE
+    @Path("cours/{id}")
+    public void deleteCours(@PathParam("id") final int id) {
+        final EntityTransaction tr = em.getTransaction();
+        try {
+            // begin starts a transaction:
+            tr.begin();
+            //int idToDelete = this.getMatiere(name).getId();
+            int idToDelete = id;
+            Matiere m = em.find(Matiere.class, idToDelete);
+            em.remove(m);
+            tr.commit();
+            //query.setParameter("name", name).executeUpdate();
+        }catch(final Throwable ex) {
+            // If an exception occurs after a begin and before the commit, the transaction has to be rollbacked.
+            if(tr.isActive()) {
+                tr.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Crash deleting Matiere: " + id, ex);
+            // A Web exception is then thrown.
+            throw new WebApplicationException(Response.status(HttpURLConnection.HTTP_BAD_REQUEST).build());
+        }
+    }*/
     //</editor-fold>
 
 	// DO NOT USE begin(), commit() or rollback() for the @GET verb.
