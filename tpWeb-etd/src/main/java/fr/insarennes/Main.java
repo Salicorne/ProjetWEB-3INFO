@@ -34,8 +34,12 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		final HttpServer server = startServer();
 		// Required to access the web pages stored in the webapp folder.
-		server.getServerConfiguration().addHttpHandler(new StaticHttpHandler("src/main/webapp"), "/myCalendarApp/");
+		//server.getServerConfiguration().addHttpHandler(new StaticHttpHandler("src/main/webapp"), "/myCalendarApp/");
+		StaticHttpHandler handler = new StaticHttpHandler("src/main/webapp");
+        server.getServerConfiguration().addHttpHandler(handler, "/tpREST/");
 		ClientBuilder.newClient().target(HTTP_ADDRESS);
+        handler.setFileCacheEnabled(false);
+
 		System.in.read();
 		server.shutdownNow();
 	}

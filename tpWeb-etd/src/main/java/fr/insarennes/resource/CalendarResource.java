@@ -57,21 +57,34 @@ public class CalendarResource {
 					tr.begin();
 					em.persist(agenda);
 
-					Enseignant ens = new Enseignant("Blouin");
-					Matiere mat = new Matiere("Web", 3);
+                    Enseignant ens = new Enseignant("Blouin");
+                    Enseignant ens2 = new Enseignant("Cellier");
+                    Matiere mat = new Matiere("Web", 3);
+                    Matiere mat2 = new Matiere("Bdd", 3);
 
-					em.persist(ens);
-					em.persist(mat);
+                    em.persist(ens);
+                    em.persist(ens2);
+                    em.persist(mat);
+                    em.persist(mat2);
 
-					TD td = new TD(mat, LocalDate.of(2015, Month.JANUARY, 2).atTime(8, 0), ens, Duration.ofHours(2));
-					agenda.addCours(td);
-					em.persist(td);
+                    CM c1 = new CM(mat2, LocalDate.of(2015, Month.JANUARY, 2).atTime(8, 0), ens, Duration.ofHours(2));
+                    CM c2 = new CM(mat, LocalDate.of(2015, Month.JANUARY, 2).atTime(10, 0), ens, Duration.ofHours(2));
+                    TD c3 = new TD(mat, LocalDate.of(2015, Month.JANUARY, 2).atTime(13, 30), ens, Duration.ofHours(2));
+                    TD c4 = new TD(mat2, LocalDate.of(2015, Month.JANUARY, 2).atTime(15, 30), ens, Duration.ofHours(1));
+                    agenda.addCours(c1);
+                    agenda.addCours(c2);
+                    agenda.addCours(c3);
+                    agenda.addCours(c4);
+                    em.persist(c1);
+                    em.persist(c2);
+                    em.persist(c3);
+                    em.persist(c4);
 					tr.commit();
 
 					LOGGER.log(Level.INFO, "Added during the creation of the calendar resource:");
 					LOGGER.log(Level.INFO, "a Enseignant: " + ens);
 					LOGGER.log(Level.INFO, "a Matiere: " + mat);
-					LOGGER.log(Level.INFO, "a TD: " + td);
+					LOGGER.log(Level.INFO, "a CM: " + c1);
 				}catch(final Throwable ex) {
 					LOGGER.log(Level.SEVERE, "Crash during the creation of initial data", ex);
 					if(tr.isActive()) {
@@ -286,11 +299,10 @@ public class CalendarResource {
 
     //</editor-fold>
 
-    @POST
+    @GET
     @Path("getIdUse/{id}")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getIdUse(final int id) {
+    public Response getIdUse(@PathParam("id") final int id) {
         try {
             ArrayList<Cours> cours = this.agenda.getIdUse(id);
             return Response.status(Response.Status.OK).entity(cours.toArray(new Cours[cours.size()])).build();

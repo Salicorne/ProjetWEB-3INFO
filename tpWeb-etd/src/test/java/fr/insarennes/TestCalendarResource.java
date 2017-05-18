@@ -148,19 +148,19 @@ public class TestCalendarResource extends JerseyTest {
         Response r1 = target("calendar/ens").request().post(Entity.xml(e1));
         Enseignant e2 = r1.readEntity(Enseignant.class);
 
-        Matiere m1 = new Matiere("BddWeb", 4);
+        Matiere m1 = new Matiere("Web", 4);
         Response r2 = target("calendar/matiere").request().post(Entity.xml(m1));
         Matiere m2 = r2.readEntity(Matiere.class);
 
         TD c = new TD(m2, LocalDateTime.now(), e2, Duration.ofHours(2));
 
         Response responseAfterPost = target("calendar/cours").request().post(Entity.xml(c));
-
-        Response res = target("calendar/getIdUse/"+m2.getId()).request().post(Entity.text(""));
+        System.out.println(m2.getId());
+        Response res = target("calendar/getIdUse/"+m2.getId()).request().get();
+        assertEquals(res.getStatus(), 200);
         ArrayList<Cours> cc = res.readEntity(new GenericType<ArrayList<Cours>>(){});
 
         assertEquals(cc.size(), 1);
-
     }
 
 	// In your tests, do not create teachers, topics, and courses that already exist (in the constructor of the CalendarResource).
